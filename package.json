@@ -1,0 +1,23 @@
+{
+  "name": "chatbot-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.8.0",
+    "@nhost/nhost-js": "^3.2.0",
+    "graphql": "^16.6.0",
+    "graphql-ws": "^5.11.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.19",
+    "@vitejs/plugin-react": "^4.0.0"
+  }
+}

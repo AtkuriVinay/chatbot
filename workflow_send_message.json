@@ -1,0 +1,94 @@
+{
+  "name": "hasura-send-message-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "hasura-send-message",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://hasura:8080/v1/graphql",
+        "options": {},
+        "bodyContentType": "json",
+        "bodyParametersJson": "{\"query\":\"query GetMessage($id:uuid!){messages_by_pk(id:$id){id body chat_id sender}}\",\"variables\":{\"id\":\"={{$json[\\\"body\\\"][\\\"input\\\"][\\\"message_id\\\"]}}\"}}"
+      },
+      "name": "FetchMessage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        450,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://hasura:8080/v1/graphql",
+        "options": {},
+        "bodyContentType": "json",
+        "bodyParametersJson": "{\"query\":\"query GetChat($id:uuid!){chats_by_pk(id:$id){id owner_id}}\",\"variables\":{\"id\":\"={{$json[\\\"body\\\"][\\\"input\\\"][\\\"chat_id\\\"]}}\"}}"
+      },
+      "name": "FetchChat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        450,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://api.openrouter.ai/v1/chat/completions",
+        "options": {},
+        "bodyContentType": "json",
+        "bodyParametersJson": "{\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"={{$json[\\\"body\\\"][\\\"data\\\"][\\\"messages_by_pk\\\"][\\\"body\\\"]}}\"}],\"max_tokens\":512}",
+        "headerParameters": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{$credentials.openrouter.apiKey}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "name": "OpenRouter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        650,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://hasura:8080/v1/graphql",
+        "options": {},
+        "bodyContentType": "json",
+        "bodyParametersJson": "{\"query\":\"mutation InsertBot($chat_id:uuid!,$body:String!){insert_messages_one(object:{chat_id:$chat_id,sender:\\\"bot\\\",body:$body}){id body created_at}}\",\"variables\":{\"chat_id\":\"={{$json[\\\"body\\\"][\\\"input\\\"][\\\"chat_id\\\"]}}\",\"body\":\"={{$json[\\\"body\\\"][\\\"choices\\\"][0][\\\"message\\\"][\\\"content\\\"] || $json[\\\"body\\\"][\\\"choices\\\"][0][\\\"text\\\"]}}\"}}"
+      },
+      "name": "InsertBot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        850,
+        250
+      ]
+    }
+  ],
+  "connections": {}
+}
